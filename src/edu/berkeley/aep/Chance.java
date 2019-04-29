@@ -1,16 +1,15 @@
 package edu.berkeley.aep;
 
-// Understands the probability of an outcome occurring
-public class Chance implements Bestable<Chance> {
+//Understands the probability of a particular outcome
+public class Chance implements Bestable<Chance>{
     private final double probability;
 
     public Chance(double probability) {
         this.probability = probability;
     }
 
-    @Override
-    public String toString() {
-        return "Chance with probability " + probability;
+    public Chance not() {
+        return new Chance(1 - probability);
     }
 
     @Override
@@ -25,21 +24,33 @@ public class Chance implements Bestable<Chance> {
         return Double.hashCode(probability);
     }
 
-    public Chance not() {
-        return new Chance(1 - probability);
+    public Chance and(Chance other) {
+        double productProb = this.probability * other.probability;
+        return new Chance(productProb);
     }
 
-    public Chance and(Chance other) {
-        return new Chance(probability * other.probability);
+    public Chance sum(Chance other) {
+        double sumProb = this.probability + other.probability;
+        return new Chance(sumProb);
+    }
+
+    public Chance diff(Chance other) {
+        double diffProb = this.probability - other.probability;
+        return new Chance(diffProb);
     }
 
     public Chance or(Chance other) {
-        // De Morgan's Law
-        return this.not().and(other.not()).not();
+        var sum = this.sum(other);
+        var prod = this.and(other);
+        return sum.diff(prod);
     }
 
     @Override
-    public boolean betterThan(Chance other) {
-        return this.probability > other.probability;
+    public boolean betterThan(Chance other) throws IllegalArgumentException {
+        if (other == null) {
+            throw new IllegalArgumentException("Can't compare null objects");
+        }
+        if (equals (other)) return true;
+        return this.probability > (other).probability;
     }
 }

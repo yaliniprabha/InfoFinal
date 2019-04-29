@@ -1,40 +1,57 @@
 package edu.berkeley.aep;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 
-// Understands how to traverse a graph
 public class Node {
 
-    private Collection<Edge> children = new ArrayList<>();
+    String location;
+    ArrayList<Edge> connections;
 
-    public boolean canReach(Node destination) {
-        return costTo(destination, new HashSet<>(), Edge.HOP_STRATEGY) > -1;
+    public Node(String name) {
+        location = name;
+        connections = new ArrayList<Edge>();
     }
 
-    public void add(Edge child) {
-        children.add(child);
+    public void addConnection(Node other, int edgeWeight) {
+        var edge = new Edge(edgeWeight, this, other);
+        this.connections.add(edge);
     }
 
-    public int countTo(Node destination) {
-        return costTo(destination, new HashSet<>(), Edge.HOP_STRATEGY);
+    public boolean canReach(Node other) {
+        if (this.countHops(other).equals(Path.UNREACHABLE)) {
+            return false;
+        }
+        return true;
     }
 
-    public int costTo(Node destination) {
-        return costTo(destination, new HashSet<>(), Edge.COST_STRATEGY);
+    public Path countHops(Node other) {
+        return pathCost(other, 1);
     }
 
-    int costTo(Node destination, Collection<Node> visited, HopStrategy strategy) {
-        if (!visited.add(this)) return -1;
-        if (destination.equals(this)) return 0;
-        var minCost = -1;
-        for (Edge child : children) {
-            var cost = child.costTo(destination, new HashSet(visited), strategy);
-            if (cost >= 0 && (cost < minCost || minCost == -1)) {
-                minCost = cost;
+    public Path pathCost(Node other, int functionType) {
+        ArrayList<Node> visited = new ArrayList<>();
+        return pathCostHelper(other, visited,0, functionType);
+    }
+
+    private Path pathCostHelper(Node other, ArrayList<Node> visited, int totalCost, int functionType) {
+        Path minPath = Path.UNREACHABLE;
+        if (visited.contains(this)) {
+            return minPath;
+        } else {
+            visited.add(this);
+        }
+        if (this.equals(other)) return new Path(totalCost);
+        for (Edge connection: this.connections) {
+            Path path;
+            if (functionType == 1) {
+                path = connection.endNode.pathCostHelper(other, new ArrayList<>(visited),totalCost + 1, functionType);
+            } else {
+                path = connection.endNode.pathCostHelper(other, new ArrayList<>(visited),totalCost + connection.weight, functionType);
+            }
+            if (path.value >= 0 && (path.compareTo(minPath) < 0 || minPath == Path.UNREACHABLE)) {
+                minPath = path;
             }
         }
-        return minCost;
+        return minPath;
     }
 }

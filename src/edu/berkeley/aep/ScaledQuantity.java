@@ -1,6 +1,5 @@
 package edu.berkeley.aep;
 
-// Understands an amount in an interval scale in a given unit
 public class ScaledQuantity implements Bestable<ScaledQuantity> {
     protected final int size;
     protected final Unit unit;
@@ -36,7 +35,12 @@ public class ScaledQuantity implements Bestable<ScaledQuantity> {
     }
 
     @Override
-    public boolean betterThan(ScaledQuantity other) {
-        return size > ((ScaledQuantity) other).convertTo(unit);
+    public boolean betterThan(ScaledQuantity other) throws IllegalArgumentException {
+        if (other == null)
+            throw new IllegalArgumentException("Can't compare null object");
+        if (equals (other)) {
+            return true;
+        }
+        return this.size > other.convertTo(unit);
     }
 }
